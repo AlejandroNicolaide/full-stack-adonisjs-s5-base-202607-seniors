@@ -3,8 +3,10 @@ import { UserTransformer } from '#transformers/user_transformer'
 
 export default class ProfilesController {
   /**
-   * GET /account/profile
-   * Devuelve el usuario autenticado. Requiere Bearer token.
+   * @show
+   * @summary Ver perfil
+   * @description Devuelve los datos del usuario autenticado. Requiere Bearer token.
+   * @responseBody 200 - {"user": "<User>"} - Usuario autenticado
    */
   async show({ auth, response }: HttpContext) {
     const user = auth.getUserOrFail()

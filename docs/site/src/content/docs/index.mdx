@@ -1,0 +1,29 @@
+---
+title: FlowSync Docs
+description: Documentación técnica de FlowSync — decisiones de arquitectura y contrato de la API.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+**FlowSync** es una aplicación web de gestión de tareas personales que mantiene
+sincronizadas las tareas del usuario con su Google Calendar (ver `docs/PRD.md`
+en el repo para el detalle completo del producto).
+
+Este sitio documenta el estado actual del proyecto: un starter kit full-stack
+con autenticación por access tokens (AdonisJS 7 + React 19), sobre el que se
+construye el resto del MVP.
+
+## Qué vas a encontrar acá
+
+<CardGrid stagger>
+	<Card title="Decisiones (ADRs)" icon="document">
+		Architecture Decision Records del monorepo: decisiones globales y
+		específicas de `backend`/`frontend`, con su contexto y consecuencias.
+		Se sincronizan automáticamente desde el repo — ver el menú lateral.
+	</Card>
+	<Card title="FlowSync API" icon="rocket">
+		Referencia de la API generada automáticamente a partir del contrato
+		OpenAPI real del backend (rutas, request/response bodies, auth). No es
+		texto escrito a mano: si la API cambia, este contrato cambia con ella.
+	</Card>
+</CardGrid>

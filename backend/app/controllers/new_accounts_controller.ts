@@ -5,8 +5,12 @@ import { UserTransformer } from '#transformers/user_transformer'
 
 export default class NewAccountsController {
   /**
-   * POST /account/register
-   * Crea una cuenta nueva y devuelve el usuario + un access token.
+   * @store
+   * @summary Registrar cuenta
+   * @description Crea una cuenta nueva y devuelve el usuario junto a un access token (campo `token`, string).
+   * @requestBody <signupValidator>
+   * @responseBody 201 - {"user": "<User>"} - Cuenta creada
+   * @responseBody 422 - {"errors": []} - Error de validación
    */
   async store({ request, response }: HttpContext) {
     const data = await request.validateUsing(signupValidator)

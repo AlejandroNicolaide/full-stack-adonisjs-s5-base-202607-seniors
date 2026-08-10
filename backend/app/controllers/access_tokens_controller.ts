@@ -6,8 +6,12 @@ import { UserTransformer } from '#transformers/user_transformer'
 
 export default class AccessTokensController {
   /**
-   * POST /account/login
-   * Verifica credenciales y emite un access token.
+   * @store
+   * @summary Iniciar sesión
+   * @description Verifica las credenciales del usuario y emite un access token (campo `token`, string).
+   * @requestBody <loginValidator>
+   * @responseBody 200 - {"user": "<User>"} - Token emitido
+   * @responseBody 400 - {"errors": []} - Credenciales inválidas
    */
   async store({ request, response }: HttpContext) {
     const { email, password } = await request.validateUsing(loginValidator)
@@ -26,8 +30,10 @@ export default class AccessTokensController {
   }
 
   /**
-   * POST /account/logout
-   * Revoca el token usado en la petición actual.
+   * @destroy
+   * @summary Cerrar sesión
+   * @description Revoca el access token usado en la petición actual. Requiere Bearer token. Responde `{ revoked: true }`.
+   * @responseBody 200 - Token revocado
    */
   async destroy({ auth, response }: HttpContext) {
     const user = auth.getUserOrFail()

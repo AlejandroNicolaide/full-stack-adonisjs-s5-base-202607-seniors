@@ -4,8 +4,10 @@ import { UserTransformer } from '#transformers/user_transformer'
 
 export default class UsersController {
   /**
-   * GET /api/v1/users
-   * Lista todos los usuarios. Requiere autenticación.
+   * @index
+   * @summary Listar usuarios
+   * @description Devuelve la lista completa de usuarios, ordenados por fecha de creación descendente. Requiere autenticación.
+   * @responseBody 200 - {"users": "<User[]>"} - Lista de usuarios
    */
   async index({ response }: HttpContext) {
     const users = await User.query().orderBy('created_at', 'desc')
@@ -13,8 +15,12 @@ export default class UsersController {
   }
 
   /**
-   * GET /api/v1/users/:id
-   * Devuelve un usuario por id. Requiere autenticación.
+   * @show
+   * @summary Ver usuario
+   * @description Devuelve un usuario por su id. Requiere autenticación.
+   * @paramPath id - El id del usuario - @type(number) @required
+   * @responseBody 200 - {"user": "<User>"} - Usuario encontrado
+   * @responseBody 404 - Usuario no encontrado
    */
   async show({ params, response }: HttpContext) {
     const user = await User.findOrFail(params.id)

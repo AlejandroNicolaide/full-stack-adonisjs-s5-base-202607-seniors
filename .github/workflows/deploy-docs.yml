@@ -1,0 +1,100 @@
+name: Deploy docs to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/site/**'
+      - '.github/workflows/deploy-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita deploys solapados si hay pushes seguidos a main. No cancela un deploy
+# en curso (podría dejar Pages a medio publicar); el siguiente push espera su turno.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            docs/site/package-lock.json
+
+      - name: Instalar dependencias del backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Preparar .env del backend (solo para generar el contrato OpenAPI, no se expone)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          node ace generate:key
+
+      - name: Aplicar migraciones (SQLite local, efímera en el runner)
+        working-directory: backend
+        run: npm run migration:run
+
+      - name: Levantar el backend real en segundo plano
+        working-directory: backend
+        run: |
+          nohup node ace serve > /tmp/backend.log 2>&1 &
+          echo "Esperando a que el backend responda en :3333..."
+          # node ace serve (modo static, sin --hmr) tarda ~20s en arrancar
+          # localmente; se deja el doble de margen para runners más lentos.
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3333/api/v1/health > /dev/null; then
+              echo "Backend listo."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "El backend no respondió a tiempo. Log:"
+          cat /tmp/backend.log
+          exit 1
+
+      - name: Instalar dependencias del sitio de docs
+        working-directory: docs/site
+        run: npm ci
+
+      # El contrato de la API se descarga del backend real recién levantado
+      # (adonis-autoswagger a partir de las rutas + anotaciones de los
+      # controllers), nunca de un archivo commiteado a mano: no puede quedar
+      # desactualizado porque no hay copia guardada que sincronizar.
+      - name: Generar snapshot real de la API (OpenAPI)
+        working-directory: docs/site
+        run: npm run generate:openapi
+
+      # El build corre "predev"/"prebuild" -> sync:adrs automáticamente, que
+      # copia los ADRs reales desde docs/adr, backend/docs/adr y
+      # frontend/docs/adr. Mismo razonamiento: nunca hay una copia guardada
+      # que pueda quedar desincronizada del origen.
+      - name: Build del sitio Astro + Starlight
+        working-directory: docs/site
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
