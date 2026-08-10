@@ -6,6 +6,21 @@ on:
     paths:
       - 'docs/site/**'
       - '.github/workflows/deploy-docs.yml'
+      # El sitio no solo depende de docs/site/: sync-adrs.mjs copia estos
+      # ADRs y generate-openapi.mjs refleja el contrato real de estos
+      # archivos del backend. Si no disparamos también con estos cambios,
+      # el sitio publicado puede quedar desactualizado en silencio hasta el
+      # próximo cambio (cualquiera) dentro de docs/site/.
+      - 'docs/adr/**'
+      - 'backend/docs/adr/**'
+      - 'frontend/docs/adr/**'
+      - 'backend/app/controllers/**'
+      - 'backend/app/validators/**'
+      - 'backend/app/models/**'
+      - 'backend/start/routes.ts'
+      - 'backend/config/swagger.ts'
+      - 'backend/package.json'
+      - 'backend/package-lock.json'
   workflow_dispatch:
 
 permissions:
