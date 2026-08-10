@@ -45,7 +45,11 @@ jobs:
 
       - name: Aplicar migraciones (SQLite local, efímera en el runner)
         working-directory: backend
-        run: npm run migration:run
+        run: |
+          # backend/tmp/ está en .gitignore (nunca se commitea); better-sqlite3
+          # crea el archivo .sqlite3 solo, pero no el directorio contenedor.
+          mkdir -p tmp
+          npm run migration:run
 
       - name: Levantar el backend real en segundo plano
         working-directory: backend
